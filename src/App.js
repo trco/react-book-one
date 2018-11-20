@@ -37,7 +37,19 @@ class App extends Component {
       user,
       title
     };
+    // class methods
+    // binding onDismiss method to the App class
+    this.onDismiss = this.onDismiss.bind(this);
+  }
 
+  // methods
+  onDismiss(id) {
+    // filter evaluates each item in this.state.list and builds new array
+    // with items that pass the test
+    const updatedList = this.state.list.filter(item => item.objectID !== id);
+    // update the list in internal App's state
+    // setState calls render after it's executed
+    this.setState({ list: updatedList });
   }
 
   render() {
@@ -53,6 +65,13 @@ class App extends Component {
             <span>{item.author}</span>
             <span>{item.num_comments}</span>
             <span>{item.points}</span>
+            <span>
+              <button
+                onClick={() => this.onDismiss(item.objectID)}
+                type="button">
+                Dismiss
+              </button>
+            </span>
           </div>
         )}
       </div>
