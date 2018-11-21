@@ -18,12 +18,27 @@ const list = [
     points: 5,
     objectID: 1,
   },
+  {
+    title: "Django",
+    url: "https://github.com/django",
+    author: "John Doe",
+    num_comments: 8,
+    points: 5,
+    objectID: 2,
+  },
 ];
+
 const user = {
   first_name: "John",
   last_name: "Doe"
 }
+
 const title = "My first React app";
+
+// returns true if searchTerm is empty string or item.title matches searchTerm
+function isSearched(searchTerm) {
+  return item => !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
+}
 
 // #1: declaration of App as component, which is instantiated with <App />
 // #2: instance of the App component can be used as element in application
@@ -35,11 +50,13 @@ class App extends Component {
     this.state = {
       list,
       user,
-      title
+      title,
+      searchTerm: "",
     };
     // class methods
     // binding onDismiss method to the App class
     this.onDismiss = this.onDismiss.bind(this);
+    this.onSearchChange = this.onSearchChange.bind(this);
   }
 
   // methods
@@ -52,12 +69,28 @@ class App extends Component {
     this.setState({ list: updatedList });
   }
 
+  // searchTerm is stored to internal App's state everytime the Search field changes
+  onSearchChange(event) {
+    this.setState({ searchTerm: event.target.value });
+  }
+
+  // filter function iterates over array and removes items that don't match the condition
+  // map function runs for every element in an array
+
   render() {
     return (
       <div className="App">
+
         <h2>{this.state.title}</h2>
         <p>Welcome {this.state.user["first_name"]} {this.state.user["last_name"]}.</p>
-        { this.state.list.map(item =>
+
+        <form>
+          <input type="text" placeholder="Search"
+            onChange={this.onSearchChange}
+          />
+        </form>
+
+        {this.state.list.filter(isSearched(this.state.searchTerm)).map(item => // filter based on current this.state.searchTerm
           <div key={item.objectID}>
             <span>
               <a href={item.url}>{item.title}</a>
@@ -66,7 +99,7 @@ class App extends Component {
             <span>{item.num_comments}</span>
             <span>{item.points}</span>
             <span>
-              <button
+              <button // onDismiss is enclosed by another function so the objectID can be passed to it
                 onClick={() => this.onDismiss(item.objectID)}
                 type="button">
                 Dismiss
