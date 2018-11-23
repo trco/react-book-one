@@ -28,11 +28,6 @@ const list = [
   },
 ];
 
-const user = {
-  first_name: "John",
-  last_name: "Doe"
-}
-
 const title = "My first React app";
 
 // returns true if searchTerm is empty string or item.title matches searchTerm
@@ -84,7 +79,10 @@ class App extends Component {
         <Search
           value={searchTerm}
           onChange={this.onSearchChange}
-        />
+        >
+          Search
+        </Search>
+
         <Table
           list={list}
           searchTerm={searchTerm}
@@ -95,49 +93,46 @@ class App extends Component {
   }
 }
 
-class Search extends Component {
-  render() {
-    // get properties passed to the component on instantiation inside of App
-    const { value, onSearchChange } = this.props
-    return (
-      <form>
-        <input
-          type="text"
-          placeholder="Search"
-          value={value}
-          onChange={onSearchChange}
-        />
-      </form>
-    )
-  }
-}
+// Search as stateless functional component
+// if component doesn't have it's own state it should be functional component
+const Search = ({ value, onChange, children }) =>
+  <form>
+    {children}
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+    />
+  </form>
 
-class Table extends Component {
-  render() {
-    // get properties passed to the component on instantiation inside of App
-    const { list, searchTerm, onDismiss } = this.props
-    return (
-      <div>
-      {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
-        <div key={item.objectID}>
-          <span>
-            <a href={item.url}>{item.title}</a>
-          </span>
-          <span>{item.author}</span>
-          <span>{item.num_comments}</span>
-          <span>{item.points}</span>
-          <span>
-            <button // onDismiss is enclosed by another function so the objectID can be passed to it
-              onClick={() => onDismiss(item.objectID)}
-              type="button">
-              Dismiss
-            </button>
-          </span>
-        </div>
-      )}
-      </div>
-    )
-  }
-}
+// Table as stateless functional component
+const Table = ({ list, searchTerm, onDismiss }) =>
+  <div>
+  {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
+    <div key={item.objectID}>
+      <span>
+        <a href={item.url}>{item.title}</a>
+      </span>
+      <span>{item.author}</span>
+      <span>{item.num_comments}</span>
+      <span>{item.points}</span>
+      <span>
+        <Button onClick={() => onDismiss(item.objectID)}>
+          Dismiss
+        </Button>
+      </span>
+    </div>
+  )}
+  </div>
+
+// Button as stateless functional component
+const Button = ({ className = '', onClick, children }) =>
+  <button
+    className={className}
+    onClick={onClick}
+    type="button"
+  >
+    {children}
+  </button>
 
 export default App;
