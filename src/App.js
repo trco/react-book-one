@@ -48,9 +48,8 @@ class App extends Component {
     super(props);
     // setting initial internal App's state
     this.state = {
-      list,
-      user,
       title,
+      list,
       searchTerm: "",
     };
     // class methods
@@ -78,37 +77,66 @@ class App extends Component {
   // map function runs for every element in an array
 
   render() {
+    const { title, list, searchTerm } = this.state;
     return (
       <div className="App">
-
-        <h2>{this.state.title}</h2>
-        <p>Welcome {this.state.user["first_name"]} {this.state.user["last_name"]}.</p>
-
-        <form>
-          <input type="text" placeholder="Search"
-            onChange={this.onSearchChange}
-          />
-        </form>
-
-        {this.state.list.filter(isSearched(this.state.searchTerm)).map(item => // filter based on current this.state.searchTerm
-          <div key={item.objectID}>
-            <span>
-              <a href={item.url}>{item.title}</a>
-            </span>
-            <span>{item.author}</span>
-            <span>{item.num_comments}</span>
-            <span>{item.points}</span>
-            <span>
-              <button // onDismiss is enclosed by another function so the objectID can be passed to it
-                onClick={() => this.onDismiss(item.objectID)}
-                type="button">
-                Dismiss
-              </button>
-            </span>
-          </div>
-        )}
+        <h2>{title}</h2>
+        <Search
+          value={searchTerm}
+          onChange={this.onSearchChange}
+        />
+        <Table
+          list={list}
+          searchTerm={searchTerm}
+          onDismiss={this.onDismiss}
+        />
       </div>
     );
+  }
+}
+
+class Search extends Component {
+  render() {
+    // get properties passed to the component on instantiation inside of App
+    const { value, onSearchChange } = this.props
+    return (
+      <form>
+        <input
+          type="text"
+          placeholder="Search"
+          value={value}
+          onChange={onSearchChange}
+        />
+      </form>
+    )
+  }
+}
+
+class Table extends Component {
+  render() {
+    // get properties passed to the component on instantiation inside of App
+    const { list, searchTerm, onDismiss } = this.props
+    return (
+      <div>
+      {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
+        <div key={item.objectID}>
+          <span>
+            <a href={item.url}>{item.title}</a>
+          </span>
+          <span>{item.author}</span>
+          <span>{item.num_comments}</span>
+          <span>{item.points}</span>
+          <span>
+            <button // onDismiss is enclosed by another function so the objectID can be passed to it
+              onClick={() => onDismiss(item.objectID)}
+              type="button">
+              Dismiss
+            </button>
+          </span>
+        </div>
+      )}
+      </div>
+    )
   }
 }
 
