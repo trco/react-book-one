@@ -28,6 +28,7 @@ class App extends Component {
     // binding methods to the App class
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.resultToState = this.resultToState.bind(this);
     this.fetchData = this.fetchData.bind(this);
   }
@@ -49,6 +50,14 @@ class App extends Component {
   // searchTerm is stored to internal App's state everytime the Search field changes
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
+  }
+
+  onSearchSubmit(event) {
+    // searchTerm updates on every onChange in search field
+    // after submission new results are fetched from API
+    const { searchTerm } = this.state;
+    this.fetchData(searchTerm);
+    event.preventDefault();
   }
 
   resultToState(result) {
@@ -83,13 +92,13 @@ class App extends Component {
           <Search
             value={searchTerm}
             onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
           >
             Search
           </Search>
         </div>
         <Table
           list={result.hits}
-          searchTerm={searchTerm}
           onDismiss={this.onDismiss}
         />
       </div>
@@ -99,14 +108,14 @@ class App extends Component {
 
 // Search as stateless functional component
 // if component doesn't have it's own state it should be functional component
-const Search = ({ value, onChange, children }) =>
-  <form>
-    {children}
+const Search = ({ value, onChange, onSubmit, children }) =>
+  <form onSubmit={onSubmit}>
     <input
       type="text"
       value={value}
       onChange={onChange}
     />
+    <button type="submit">{children}</button>
   </form>
 
 const midColumn = {
@@ -136,7 +145,7 @@ const Table = ({ list, searchTerm, onDismiss }) =>
       <span style={smallColumn}>
       </span>
     </div>
-    {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
+    {list.map(item => // filter based on current this.state.searchTerm
       <div key={item.objectID} className="table-row">
         <span style={midColumn}>
           <a href={item.url}>{item.title}</a>
