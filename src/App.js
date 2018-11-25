@@ -25,7 +25,7 @@ class App extends Component {
       searchTerm: DEFAULT_QUERY,
     };
     // class methods
-    // binding onDismiss method to the App class
+    // binding methods to the App class
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
     this.resultToState = this.resultToState.bind(this);
@@ -34,12 +34,16 @@ class App extends Component {
 
   // methods
   onDismiss(id) {
-    // filter evaluates each item in this.state.list and builds new array
+    // filter evaluates each item in this.state.result and builds new array
     // with items that pass the test
-    const updatedList = this.state.list.filter(item => item.objectID !== id);
-    // update the list in internal App's state
+    const updatedHits = this.state.result.hits.filter(item => item.objectID !== id);
+    // update the result in internal App's state
     // setState calls render after it's executed
-    this.setState({ list: updatedList });
+    this.setState({
+      // hits in this.state.result are updated using spread operator for objects
+      // state is thus not mutated directly like in this.state.result.hits = updatedHits
+      result: { ...this.state.result, hits: updatedHits }
+    });
   }
 
   // searchTerm is stored to internal App's state everytime the Search field changes
