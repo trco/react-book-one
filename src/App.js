@@ -74,15 +74,16 @@ class App extends Component {
   render() {
     const { title, list, searchTerm } = this.state;
     return (
-      <div className="App">
+      <div className="page">
         <h2>{title}</h2>
-        <Search
-          value={searchTerm}
-          onChange={this.onSearchChange}
-        >
-          Search
-        </Search>
-
+        <div className="interactions">
+          <Search
+            value={searchTerm}
+            onChange={this.onSearchChange}
+          >
+            Search
+          </Search>
+        </div>
         <Table
           list={list}
           searchTerm={searchTerm}
@@ -105,24 +106,57 @@ const Search = ({ value, onChange, children }) =>
     />
   </form>
 
+const midColumn = {
+  width: '30%',
+};
+
+const smallColumn = {
+  width: '10%',
+};
+
 // Table as stateless functional component
 const Table = ({ list, searchTerm, onDismiss }) =>
-  <div>
-  {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
-    <div key={item.objectID}>
-      <span>
-        <a href={item.url}>{item.title}</a>
+  <div className="table">
+    <div className="table-row table-header">
+      <span style={midColumn}>
+        Library
       </span>
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{item.points}</span>
-      <span>
-        <Button onClick={() => onDismiss(item.objectID)}>
-          Dismiss
-        </Button>
+      <span style={midColumn}>
+        Author
+      </span>
+      <span style={midColumn}>
+        Number of comments
+      </span>
+      <span style={smallColumn}>
+        Points
+      </span>
+      <span style={smallColumn}>
       </span>
     </div>
-  )}
+    {list.filter(isSearched(searchTerm)).map(item => // filter based on current this.state.searchTerm
+      <div key={item.objectID} className="table-row">
+        <span style={midColumn}>
+          <a href={item.url}>{item.title}</a>
+        </span>
+        <span style={midColumn}>
+          {item.author}
+        </span>
+        <span style={midColumn}>
+          {item.num_comments}
+        </span>
+        <span style={smallColumn}>
+          {item.points}
+        </span>
+        <span style={smallColumn}>
+          <Button
+          onClick={() => onDismiss(item.objectID)}
+          className="button-inline"
+          >
+          Dismiss
+          </Button>
+        </span>
+      </div>
+    )}
   </div>
 
 // Button as stateless functional component
