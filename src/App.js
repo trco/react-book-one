@@ -1,34 +1,11 @@
 import React, { Component } from 'react';
 import './App.css';
 
-const list = [
-  {
-    title: "React",
-    url: "https://facebook.github.io/react/",
-    author: "Jordan Walke",
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: "Redux",
-    url: "https://github.com/reactjs/redux",
-    author: "Dan Abramov, Andrew Clark",
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-  {
-    title: "Django",
-    url: "https://github.com/django",
-    author: "John Doe",
-    num_comments: 8,
-    points: 5,
-    objectID: 2,
-  },
-];
-
 const title = "My first React app";
+const DEFAULT_QUERY = "redux";
+const PATH_BASE = "https://hn.algolia.com/api/v1";
+const PATH_SEARCH = "/search";
+const PARAM_SEARCH = "query=";
 
 // returns true if searchTerm is empty string or item.title matches searchTerm
 function isSearched(searchTerm) {
@@ -44,13 +21,15 @@ class App extends Component {
     // setting initial internal App's state
     this.state = {
       title,
-      list,
-      searchTerm: "",
+      result: null,
+      searchTerm: DEFAULT_QUERY,
     };
     // class methods
     // binding onDismiss method to the App class
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.resultToState = this.resultToState.bind(this);
+    this.fetchData = this.fetchData.bind(this);
   }
 
   // methods
@@ -68,11 +47,31 @@ class App extends Component {
     this.setState({ searchTerm: event.target.value });
   }
 
+  resultToState(result) {
+    this.setState({ result: result });
+  }
+
+  fetchData(searchTerm) {
+    const requestURL = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`;
+    fetch(requestURL)
+      .then(response => response.json())
+      .then(result => this.resultToState(result));
+  }
+
+  // lifecycle method, which is ran after component is rendered
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchData(searchTerm);
+  }
+
   // filter function iterates over array and removes items that don't match the condition
   // map function runs for every element in an array
 
   render() {
-    const { title, list, searchTerm } = this.state;
+    const { title, result, searchTerm } = this.state;
+
+    if (!result) { return null; }
+
     return (
       <div className="page">
         <h2>{title}</h2>
@@ -85,7 +84,7 @@ class App extends Component {
           </Search>
         </div>
         <Table
-          list={list}
+          list={result.hits}
           searchTerm={searchTerm}
           onDismiss={this.onDismiss}
         />
