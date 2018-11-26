@@ -2,19 +2,20 @@ import React, { Component } from 'react';
 import './App.css';
 
 const title = "My first React app";
+
 const DEFAULT_QUERY = "redux";
+const DEFAULT_PAGE = 0;
+const DEFAULT_HPP = '20';
+
 const PATH_BASE = "https://hn.algolia.com/api/v1";
 const PATH_SEARCH = "/search";
 const PARAM_SEARCH = "query=";
+const PARAM_PAGE = "page=";
+const PARAM_HPP = 'hitsPerPage=';
 
-// returns true if searchTerm is empty string or item.title matches searchTerm
-function isSearched(searchTerm) {
-  return item => !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
-}
-
-// #1: declaration of App as component, which is instantiated with <App />
-// #2: instance of the App component can be used as element in application
-// #3: components are build from elements
+// declaration of App as component, which is instantiated with <App />
+// instance of the App component can be used as element in application
+// components are build from elements
 class App extends Component {
   constructor(props) {
     super(props);
@@ -56,16 +57,24 @@ class App extends Component {
     // searchTerm updates on every onChange in search field
     // after submission new results are fetched from API
     const { searchTerm } = this.state;
-    this.fetchData(searchTerm);
+    this.fetchData(searchTerm, DEFAULT_PAGE);
     event.preventDefault();
   }
 
   resultToState(result) {
-    this.setState({ result: result });
+    // get hits and page from result = { hits: x, page: y }
+    const { hits, page } = result;
+
+    // if page=0 set oldHits to empty array else set them to the hits in the internal state
+    const oldHits = page !==0 ? this.state.result.hits : [];
+    // join oldHits with new hits from result passed as argument
+    const updatedHits = [ ...oldHits, ...hits ];
+
+    this.setState({ result: { hits: updatedHits, page: page } });
   }
 
-  fetchData(searchTerm) {
-    const requestURL = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`;
+  fetchData(searchTerm, page) {
+    const requestURL = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`;
     fetch(requestURL)
       .then(response => response.json())
       .then(result => this.resultToState(result));
@@ -74,7 +83,7 @@ class App extends Component {
   // lifecycle method, which is ran after component is rendered
   componentDidMount() {
     const { searchTerm } = this.state;
-    this.fetchData(searchTerm);
+    this.fetchData(searchTerm, DEFAULT_PAGE);
   }
 
   // filter function iterates over array and removes items that don't match the condition
@@ -82,6 +91,8 @@ class App extends Component {
 
   render() {
     const { title, result, searchTerm } = this.state;
+    // if result exists page=result.page else page=0
+    const page = (result && result.page) || 0;
 
     if (!result) { return null; }
 
@@ -91,8 +102,8 @@ class App extends Component {
         <div className="interactions">
           <Search
             value={searchTerm}
-            onChange={this.onSearchChange}
-            onSubmit={this.onSearchSubmit}
+            onChange={this.onSearchChange} // triggers event
+            onSubmit={this.onSearchSubmit} // triggers event
           >
             Search
           </Search>
@@ -101,6 +112,13 @@ class App extends Component {
           list={result.hits}
           onDismiss={this.onDismiss}
         />
+        <div className="interactions">
+          <Button
+            onClick={() => this.fetchData(searchTerm, page + 1)} // triggers function
+          >
+            More
+          </Button>
+        </div>
       </div>
     );
   }
@@ -161,7 +179,7 @@ const Table = ({ list, searchTerm, onDismiss }) =>
         </span>
         <span style={smallColumn}>
           <Button
-          onClick={() => onDismiss(item.objectID)}
+          onClick={() => onDismiss(item.objectID)} // triggers function
           className="button-inline"
           >
           Dismiss
