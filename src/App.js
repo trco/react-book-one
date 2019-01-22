@@ -22,7 +22,8 @@ class App extends Component {
     // setting initial internal App's state
     this.state = {
       title,
-      result: null,
+      results: null,
+      searchKey: '',
       searchTerm: DEFAULT_QUERY,
     };
     // class methods
@@ -31,20 +32,24 @@ class App extends Component {
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.resultToState = this.resultToState.bind(this);
+    this.needsToRunFetch = this.needsToRunFetch.bind(this);
     this.fetchData = this.fetchData.bind(this);
   }
 
   // methods
   onDismiss(id) {
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
     // filter evaluates each item in this.state.result and builds new array
     // with items that pass the test
-    const updatedHits = this.state.result.hits.filter(item => item.objectID !== id);
+    const updatedHits = hits.filter(item => item.objectID !== id);
     // update the result in internal App's state
     // setState calls render after it's executed
     this.setState({
-      // hits in this.state.result are updated using spread operator for objects
-      // state is thus not mutated directly like in this.state.result.hits = updatedHits
-      result: { ...this.state.result, hits: updatedHits }
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page }
+      }
     });
   }
 
@@ -57,20 +62,39 @@ class App extends Component {
     // searchTerm updates on every onChange in search field
     // after submission new results are fetched from API
     const { searchTerm } = this.state;
-    this.fetchData(searchTerm, DEFAULT_PAGE);
+    this.setState({ searchKey: searchTerm });
+
+    // runs fetchData only if results[searchTerm] doesn't exist yet
+    if (this.needsToRunFetch(searchTerm)) {
+      this.fetchData(searchTerm, DEFAULT_PAGE);
+    }
+
     event.preventDefault();
   }
 
   resultToState(result) {
     // get hits and page from result = { hits: x, page: y }
     const { hits, page } = result;
+    const { searchKey, results } = this.state;
 
-    // if page=0 set oldHits to empty array else set them to the hits in the internal state
-    const oldHits = page !==0 ? this.state.result.hits : [];
-    // join oldHits with new hits from result passed as argument
+    // if results are empty set oldHits to empty array else set them to the hits in the internal state
+    const oldHits = results && results[searchKey]
+      ? results[searchKey].hits
+      : [];
+
+    // join oldHits with new hits from results passed as argument
     const updatedHits = [ ...oldHits, ...hits ];
 
-    this.setState({ result: { hits: updatedHits, page: page } });
+    this.setState({
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page }
+      }
+    });
+  }
+
+  needsToRunFetch(searchTerm) {
+    return !this.state.results[searchTerm];
   }
 
   fetchData(searchTerm, page) {
@@ -83,6 +107,7 @@ class App extends Component {
   // lifecycle method, which is ran after component is rendered
   componentDidMount() {
     const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
     this.fetchData(searchTerm, DEFAULT_PAGE);
   }
 
@@ -90,11 +115,20 @@ class App extends Component {
   // map function runs for every element in an array
 
   render() {
-    const { title, result, searchTerm } = this.state;
-    // if result exists page=result.page else page=0
-    const page = (result && result.page) || 0;
+    const { title, results, searchKey, searchTerm } = this.state;
+    // if results[searchKey].page exists page=results[searchKey].page else page=0
+    const page = (
+      results &&
+      results[searchKey] &&
+      results[searchKey].page
+    ) || 0;
 
-    if (!result) { return null; }
+    // if results[searchKey].hits exists list=results[searchKey].hits else hits=[]
+    const list = (
+      results &&
+      results[searchKey] &&
+      results[searchKey].hits
+    ) || [];
 
     return (
       <div className="page">
@@ -109,12 +143,12 @@ class App extends Component {
           </Search>
         </div>
         <Table
-          list={result.hits}
+          list={list}
           onDismiss={this.onDismiss}
         />
         <div className="interactions">
           <Button
-            onClick={() => this.fetchData(searchTerm, page + 1)} // triggers function
+            onClick={() => this.fetchData(searchKey, page + 1)} // triggers function
           >
             More
           </Button>
